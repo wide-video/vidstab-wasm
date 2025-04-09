@@ -1,0 +1,53 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+*:where(:not(canvas, progress, video)) {
+    all: unset;
+    display: revert;
+    cursor: revert;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: black;
+    color: white;
+}
+
+body {
+	display: grid;
+    justify-items: center;
+    align-items: center;
+}
+canvas, video {
+	max-width: 640px;
+}
+
+#stabilizedCanvasContainer {
+    &:empty {
+        display: none;
+    }
+
+    canvas:not(.matching) {
+	    opacity: .3;
+    }
+}
+
+#progressContainer {
+	position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(1em);
+    background: #00000099;
+
+    #progressContainerStats {
+        p {
+            display: block;
+        }
+    }
+}

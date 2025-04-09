@@ -4,7 +4,7 @@
 
 - `/demo` - demo HTML app
 - `/ffmpeg` - ffmpeg implementation classes (not used in this build)
-- `/simpleomp` - files from [Tencent/ncnn](https://github.com/Tencent/ncnn/blob/master/src) and other following emscripten OpenMP minimal implementation [emscripten issue](https://github.com/emscripten-core/emscripten/issues/13892#issuecomment-2599113825) and [Tencent issue](https://github.com/Tencent/ncnn/issues/5977)
+- `/simpleomp` - files from [Tencent/ncnn](https://github.com/Tencent/ncnn/blob/master/src) and other following emscripten OpenMP minimal implementation discussed on [emscripten issue](https://github.com/emscripten-core/emscripten/issues/13892#issuecomment-2599113825) and [Tencent issue](https://github.com/Tencent/ncnn/issues/5977)
 - `/wasm` - compiled .wasm artifacts
 
 ## Build
@@ -36,14 +36,14 @@ docker attach 33a1b7c14e73   # reattach the terminal & stdin
 
 ## FFmpeg
 
-FFmpeg examples
+FFmpeg examples:
 
 ```sh
-ffmpeg -i oojVZSZo4lM.mp4 -vf vidstabdetect=shakiness=10:accuracy=15:result="oojVZSZo4lM.mp4.trf" -vframes 100 -f null -
-ffmpeg -i oojVZSZo4lM.mp4 -vf vidstabtransform=zoom=5:input="oojVZSZo4lM.mp4.trf" oojVZSZo4lM-stab.mp4
+ffmpeg -i input.mp4 -vf vidstabdetect=shakiness=10:accuracy=15:result="input.mp4.trf" -vframes 100 -f null -
+ffmpeg -i input.mp4 -vf vidstabtransform=zoom=5:input="input.mp4.trf" output.mp4
 ```
 
-# Issues
+## Issues
 
 Default `printf()` doesnt seems to log into console when `fopen()` is in use. Solution is a custom printf function:
 
@@ -61,5 +61,5 @@ int printf3(const char *format, ...) {
   return 0;
 }
 
-printf3("v=%d", 1);
+printf3("v=%d", 123);
 ```

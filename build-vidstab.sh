@@ -24,7 +24,7 @@ FLAGS=(
 
 	# Emscripten
 	-lworkerfs.js
-	-s EXPORTED_FUNCTIONS="[_init, _addFrame, _getTransforms, _exit, _malloc]"
+	-s EXPORTED_FUNCTIONS="[_detectInit, _detectAddFrame, _transform, _exit, _malloc]"
 	-s EXPORTED_RUNTIME_METHODS="[ccall, FS, WORKERFS]"
 	-s EXIT_RUNTIME=1
 

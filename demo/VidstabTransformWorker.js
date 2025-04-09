@@ -1,5 +1,7 @@
 addEventListener("message", async ({data:eventData}) => {
-    const {appUrlBase, blob, width, height, times} = eventData;
+    const {appUrlBase, camPathAlgo, blob, height, interpolType,
+        maxAngle, maxShift, optZoom, smoothing, smoothZoom, times,
+        width, zoom, zoomSpeed} = eventData;
     const wasmUrlBase = `${appUrlBase}../wasm/`;
     const scriptUrl = `${wasmUrlBase}vidstab.js`;
     importScripts(scriptUrl);
@@ -7,15 +9,21 @@ addEventListener("message", async ({data:eventData}) => {
     const vidstab = await createVidstab({
         mainScriptUrlOrBlob: scriptUrl,
         locateFile:url => `${wasmUrlBase}${url}`,
-        print:d => console.log(d),
-        printErr:d => console.log(d)});
+        print:d => d && console.log(d),
+        printErr:d => d && console.log(d)});
     const transformsCountPtr = vidstab._malloc(4);
     const transformsPtr = vidstab._malloc(4);
     const path = mountTRF(vidstab, blob);
     const t0 = performance.now();
-    const resultCode = vidstab.ccall("getTransforms", "number",
-        ["string", "number", "number", "number", "number"],
-        [path, width, height, transformsCountPtr, transformsPtr]);
+    const resultCode = vidstab.ccall("transform", "number",
+        ["string", "number", "number",
+            "number", "number", "number", "number",
+            "number", "number", "number", "number",
+            "number", "number", "number"],
+        [path, width, height, 
+            smoothing ?? -1, zoom ?? -1, optZoom ?? -1, zoomSpeed ?? -1,
+            interpolType ?? -1, maxShift ?? -1, maxAngle ?? -1, smoothZoom ?? -1,
+            camPathAlgo ?? -1, transformsCountPtr, transformsPtr]);
     const memory = vidstab.HEAPU8.length;
     const transforms = bufferToTransforms(vidstab, transformsCountPtr, transformsPtr, times);
     try {

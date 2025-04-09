@@ -3,7 +3,8 @@ let detector;
 addEventListener("message", async ({data:eventData}) => {
     switch(eventData.kind) {
         case "init": {
-            const {appUrlBase, width, height} = eventData;
+            const {accuracy, appUrlBase, contrastThreshold, height, numThreads,
+                shakiness, stepSize, virtualTripod, width} = eventData;
             const wasmUrlBase = `${appUrlBase}../wasm/`;
             const scriptUrl = `${wasmUrlBase}vidstab.js`;
             importScripts(scriptUrl, `${appUrlBase}BlobBuilder.js`);
@@ -17,13 +18,15 @@ addEventListener("message", async ({data:eventData}) => {
                 locateFile:url => `${wasmUrlBase}${url}`,
                 stdout:(buffer, offset, length) => 
                     length && blobBuilder.add(buffer.slice(offset, offset + length).buffer),
-                print:d => console.log(d),
-                printErr:d => console.log(d)});
+                print:d => d && console.log(d),
+                printErr:d => d && console.log(d)});
             detector.framePtr = vidstab._malloc(frameSize);
-            const resultCode = vidstab.ccall("init", "number",
-                ["number", "number"],
-                [width, height]);
-            self.postMessage("ok");
+            const resultCode = vidstab.ccall("detectInit", "number",
+                ["number", "number", "number", "number",
+                    "number", "number", "number", "number"],
+                [width, height, shakiness ?? -1, accuracy ?? -1,
+                    stepSize ?? -1, virtualTripod ?? -1, contrastThreshold ?? -1, numThreads ?? -1]);
+            self.postMessage({resultCode});
             break;
         }
         case "addFrame": {
@@ -31,16 +34,17 @@ addEventListener("message", async ({data:eventData}) => {
             const {frameBuffer, framePtr, times, vidstab} = detector;
             RGBA2Luma(data, frameBuffer);
             vidstab.HEAPU8.set(frameBuffer, framePtr);
-            const resultCode = vidstab.ccall("addFrame", "number",
+            const resultCode = vidstab.ccall("detectAddFrame", "number",
                 ["number"],
                 [framePtr]);
             times.push(mediaTime);
-            self.postMessage(vidstab.HEAPU8.length);
+            self.postMessage({resultCode, heap:vidstab.HEAPU8.length});
             break;
         }
-        case "finishDetection": {
+        case "finish": {
             const {blobBuilder, times, vidstab} = detector;
             try {
+                // flush-es remaining stdout
                 vidstab._exit(0);
             } catch(error) {}
             const blob = blobBuilder.flush();

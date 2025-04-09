@@ -1,42 +1,46 @@
-#include <emscripten.h>
-#include <stdarg.h>
 #include "vid.stab/src/libvidstab.h"
 
-#define MOD_NAME "wv"
+#define MOD_NAME "vidstab-wasm"
 
 VSMotionDetect motionDetect;
 VSTransformData transformData;
 VSManyLocalMotions localMotions;
 FILE *f;
 
-int printf2(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    char buffer[1024];
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    EM_ASM({console.log(UTF8ToString($0));}, buffer);
-    return 0;
-}
-
-int init(int width, int height) {
-    vs_vector_init(&localMotions, 1024);
+int detectInit(int width, int height,
+    int shakiness, int accuracy, int stepSize, int virtualTripod,
+    double contrastThreshold, int numThreads) {
+    if(vs_vector_init(&localMotions, 1024) != VS_OK)
+        return 1;
 
     VSFrameInfo frameInfo;
     if(!vsFrameInfoInit(&frameInfo, width, height, PF_GRAY8))
-        return 1;
+        return 2;
     
     VSMotionDetectConfig motionDetectConfig = vsMotionDetectGetDefaultConfig(MOD_NAME);
-    motionDetectConfig.numThreads = 8;
-
-    VSTransformConfig transformConfig = vsTransformGetDefaultConfig(MOD_NAME);
+    if(shakiness != -1)
+        motionDetectConfig.shakiness = shakiness;
+    if(accuracy != -1)
+        motionDetectConfig.accuracy = accuracy;
+    if(stepSize != -1)
+        motionDetectConfig.stepSize = stepSize;
+    if(virtualTripod != -1)
+        motionDetectConfig.virtualTripod = virtualTripod;
+    if(contrastThreshold != -1)
+        motionDetectConfig.contrastThreshold = contrastThreshold;
+    if(numThreads != -1)
+        motionDetectConfig.numThreads = numThreads;
+    
+    vs_log_info(MOD_NAME, "Detect Config:");
+    vs_log_info(MOD_NAME, "    shakiness: %i\n", motionDetectConfig.shakiness);
+    vs_log_info(MOD_NAME, "    accuracy: %i\n", motionDetectConfig.accuracy);
+    vs_log_info(MOD_NAME, "    stepSize: %i\n", motionDetectConfig.stepSize);
+    vs_log_info(MOD_NAME, "    virtualTripod: %i\n", motionDetectConfig.virtualTripod);
+    vs_log_info(MOD_NAME, "    contrastThreshold: %f\n", motionDetectConfig.contrastThreshold);
+    vs_log_info(MOD_NAME, "    numThreads: %i\n", motionDetectConfig.numThreads);
     
     if(vsMotionDetectInit(&motionDetect, &motionDetectConfig, &frameInfo) != VS_OK)
         return 3;
-
-//motionDetect.serializationMode = 1;
-
-    vsMotionDetectGetConfig(&motionDetectConfig, &motionDetect);
 
     f = fopen("/dev/stdout", "w");
     if(f == NULL)
@@ -45,13 +49,10 @@ int init(int width, int height) {
     if(vsPrepareFile(&motionDetect, f) != VS_OK)
         return 5;
 
-    if(vsTransformDataInit(&transformData, &transformConfig, &frameInfo, &frameInfo) != VS_OK)
-        return 6;
-
     return 0;
 }
 
-int addFrame(uint8_t* framePtr) {
+int detectAddFrame(uint8_t* framePtr) {
     VSFrame vsFrame;
     vsFrame.data[0] = framePtr;
     vsFrame.linesize[0] = motionDetect.fi.width;
@@ -63,18 +64,52 @@ int addFrame(uint8_t* framePtr) {
     if(vsWriteToFile(&motionDetect, f, &localmotions) != VS_OK)
         return 2;
 
-    fflush(f);
-    vs_vector_del(&localmotions);
+    if(vs_vector_del(&localmotions) != VS_OK)
+        return 3;
+
     return 0;
 }
 
-int getTransforms(const char* trfFile, int width, int height, int* transformsCountPtr, int* transformsPtr) {
+int transform(const char* trfFile, int width, int height,
+    int smoothing, double zoom, int optZoom, double zoomSpeed,
+    VSInterpolType interpolType, int maxShift, double maxAngle, int smoothZoom,
+    VSCamPathAlgo  camPathAlgo, int* transformsCountPtr, int* transformsPtr) {
     VSFrameInfo frameInfo;
     if(!vsFrameInfoInit(&frameInfo, width, height, PF_GRAY8))
         return 1;
 
     VSTransformData transformData;
-    VSTransformConfig transformConfig = vsTransformGetDefaultConfig("wv");
+    VSTransformConfig transformConfig = vsTransformGetDefaultConfig(MOD_NAME);
+    if(smoothing != -1)
+        transformConfig.smoothing = smoothing;
+    if(zoom != -1)
+        transformConfig.zoom = zoom;
+    if(optZoom != -1)
+        transformConfig.optZoom = optZoom;
+    if(zoomSpeed != -1)
+        transformConfig.zoomSpeed = zoomSpeed;
+    if(interpolType != -1)
+        transformConfig.interpolType = interpolType;
+    if(maxShift != -1)
+        transformConfig.maxShift = maxShift;
+    if(maxAngle != -1)
+        transformConfig.maxAngle = maxAngle;
+    if(smoothZoom != -1)
+        transformConfig.smoothZoom = smoothZoom;
+    if(camPathAlgo != -1)
+        transformConfig.camPathAlgo = camPathAlgo;
+
+    vs_log_info(MOD_NAME, "Transform Config:");
+    vs_log_info(MOD_NAME, "    smoothing: %i\n", transformConfig.smoothing);
+    vs_log_info(MOD_NAME, "    zoom: %f\n", transformConfig.zoom);
+    vs_log_info(MOD_NAME, "    optZoom: %i\n", transformConfig.optZoom);
+    vs_log_info(MOD_NAME, "    zoomSpeed: %f\n", transformConfig.zoomSpeed);
+    vs_log_info(MOD_NAME, "    interpolType: %i\n", transformConfig.interpolType);
+    vs_log_info(MOD_NAME, "    maxShift: %i\n", transformConfig.maxShift);
+    vs_log_info(MOD_NAME, "    maxAngle: %f\n", transformConfig.maxAngle);
+    vs_log_info(MOD_NAME, "    smoothZoom: %i\n", transformConfig.smoothZoom);
+    vs_log_info(MOD_NAME, "    camPathAlgo: %i\n", transformConfig.camPathAlgo);
+
     if(vsTransformDataInit(&transformData, &transformConfig, &frameInfo, &frameInfo) != VS_OK)
         return 2;
 

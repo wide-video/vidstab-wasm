@@ -67,6 +67,7 @@ int detectAddFrame(uint8_t* framePtr) {
     if(vs_vector_del(&localmotions) != VS_OK)
         return 3;
 
+    fflush(stdout);
     return 0;
 }
 

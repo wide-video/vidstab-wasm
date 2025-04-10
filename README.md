@@ -27,12 +27,23 @@ docker start 33a1b7c14e73    # restart in the background
 docker attach 33a1b7c14e73   # reattach the terminal & stdin
 ```
 
-## Runtime
+## Performance
 
-### Detection WASM Memory
+Runtime performance on Mac Mini M2
 
-- 2700x 1280x720 frames -> 48MB -> 20 minutes of 60fps -> 1.3GB
-- 2900x 1920x1080 frames -> 60MB -> 20 minutes of 60fps -> 1.5GB
+### 1280x720
+
+- frames: ~2680
+- speed: 15ms per frame
+- Detect HEAP: 48MB (~20 minutes of 60fps -> 1.3GB)
+- TRF: 34MB
+
+### 1920x1080
+
+- frames: ~2900
+- speed: 42ms per frame
+- Detect HEAP: 60MB (~20 minutes of 60fps -> 1.5GB)
+- TRF: 40MB
 
 ## FFmpeg
 

@@ -22,9 +22,9 @@ export class VidstabDetect {
         times.push(mediaTime);
     }
 
-    async finish() {
+    async flush() {
         const {worker} = this;
-        worker.postMessage({kind:"finish"});
+        worker.postMessage({kind:"flush"});
         const result = await new Promise(resolve => {
             worker.addEventListener("message", event => resolve(event.data))}, {once:true});
         this.dispose();

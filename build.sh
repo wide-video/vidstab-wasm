@@ -13,7 +13,7 @@ git clone --depth=1 --branch wide.video https://github.com/wide-video/vid.stab
 mkdir wasm -p
 
 # build simpleomp
-em++ simpleomp/simpleomp.cpp -o wasm/simpleomp.o -DNCNN_SIMPLEOMP=1 -O3 -c
+em++ simpleomp/simpleomp.cpp -o wasm/simpleomp.o -DNCNN_SIMPLEOMP=1 -O3 -c -flto
 
 # build vidstab
 ./build-vidstab.sh

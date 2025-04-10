@@ -4,15 +4,19 @@ import { VidstabDetect } from "./VidstabDetect.js";
 import { VidstabTransform } from "./VidstabTransform.js";
 import { WVTrf } from "./WVTrf.js";
 
-const url = "assets/oojVZSZo4lM.mp4";
-//const url = "assets/oojVZSZo4lM-3sec.mp4";
-//const url = "assets/ohl1kz-JcTg.mp4";
-//const url = "assets/GOPR0438.MP4";
-//const url = "assets/GOPR0438-30fps-10sec.MP4";
-const transformResolution = {width:640, height:360};
-//const transformResolution = {width:1280, height:720};
-//const transformResolution = {width:1920, height:1080};
-const frameCount = 100;
+const source = {
+	//url: "assets/oojVZSZo4lM.mp4",
+	//url: "assets/oojVZSZo4lM-3sec.mp4",
+	//url: "assets/ohl1kz-JcTg.mp4",
+	url: "assets/GOPR0438.MP4",
+	//url: "assets/GOPR0438-30fps-10sec.MP4",
+	//transformResolution: {width:640, height:360},
+	//transformResolution: {width:1280, height:720},
+	transformResolution: {width:1920, height:1080},
+	frameCount: 300,
+
+	//wvTrfUrl: "assets/GOPR0438.MP4-1280x720-3000.wvtrf",
+}
 
 const videoContainer = document.getElementById("videoContainer");
 const transformCanvas = document.createElement("canvas");
@@ -26,9 +30,8 @@ const progressContainerStats = document.getElementById("progressContainerStats")
 const formatMB = bytes => `${(bytes/1024/1024).toFixed(1)}MB`;
 const formatMS = duration => `${duration|0}ms`;
 
-async function detect(streamer, width, height) {
+async function detect(streamer, width, height, frameCount) {
 	const {video} = streamer;
-	videoContainer.append(video);
 
 	transformCanvas.width = width;
 	transformCanvas.height = height;
@@ -39,7 +42,7 @@ async function detect(streamer, width, height) {
         stepSize: undefined,
 		virtualTripod: undefined,
 		contrastThreshold: undefined,
-		numThreads: 4}
+		numThreads: navigator.hardwareConcurrency}
 	const detector = await VidstabDetect.init(width, height, config);
 
 	const stats = {addFrame:{count:0, duration:0}};
@@ -67,7 +70,7 @@ async function detect(streamer, width, height) {
 			console.log(message);
 	}
 
-	return detector.finish();
+	return detector.flush();
 }
 
 async function transform(streamer, wvTrfData) {
@@ -83,9 +86,9 @@ async function transform(streamer, wvTrfData) {
 		maxAngle: undefined,
 		smoothZoom: undefined,
         camPathAlgo: undefined}
-	const {memory, transforms, duration} = await VidstabTransform.transform(trf, width, height, times, config);
+	const {heap, transforms, duration} = await VidstabTransform.transform(trf, width, height, times, config);
 
-	console.log(`TRF: ${formatMB(trf.size)}, WASM Heap: ${formatMB(memory)}, ${formatMS(duration)}`);
+	console.log(`TRF: ${formatMB(trf.size)}, WASM Heap: ${formatMB(heap)}, ${formatMS(duration)}`);
 	progressContainer.remove();
 
 	const {video} = streamer;
@@ -108,11 +111,40 @@ async function transform(streamer, wvTrfData) {
 	render();
 }
 
+async function decide(wvTrf, filename) {
+	const {promise, resolve} = Promise.withResolvers();
+
+	const link = document.createElement("a");
+	link.href = URL.createObjectURL(wvTrf);
+	link.download = filename;
+	link.innerText = `Download ${filename}`;
+	link.onclick = resolve;
+
+	const link2 = document.createElement("a");
+	link2.innerText = "Skip";
+	link2.onclick = resolve;
+
+	progressContainer.innerHTML = "";
+	progressContainer.append(link, link2);
+	await promise;
+	progressContainer.innerHTML = "";
+	return;
+}
+
 (async () => {
+	const {frameCount, transformResolution, url, wvTrfUrl} = source;
 	const streamer = await Streamer.init(url);
-	const {height, width} = transformResolution;
-	const {blob, times} = await detect(streamer, width, height);
-	const wvTrf = WVTrf.create(blob, width, height, times);
+	videoContainer.append(streamer.video);
+	let wvTrf;
+	if(wvTrfUrl) {
+		wvTrf = await (await fetch(wvTrfUrl)).blob();
+	} else {
+		const {height, width} = transformResolution;
+		const {blob, times} = await detect(streamer, width, height, frameCount);
+		wvTrf = WVTrf.create(blob, width, height, times);
+		await decide(wvTrf, `${url.split("/").pop()}-${width}x${height}-${frameCount}.wvtrf`);
+	}
+
 	const wvTrfData = await WVTrf.parse(wvTrf);
 	await transform(streamer, wvTrfData);
 })()

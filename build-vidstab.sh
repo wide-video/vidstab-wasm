@@ -23,14 +23,17 @@ FLAGS=(
 	-sPTHREAD_POOL_SIZE=1 # (openmp issue?) runtime hangs when pool size not set
 
 	# Emscripten
-	-lworkerfs.js
-	-s EXPORTED_FUNCTIONS="[_detectInit, _detectAddFrame, _transform, _exit, _malloc]"
-	-s EXPORTED_RUNTIME_METHODS="[ccall, FS, WORKERFS]"
+	-s EXPORTED_FUNCTIONS="[_detectInit, _detectAddFrame, _transform, _malloc]"
+	-s EXPORTED_RUNTIME_METHODS="[ccall, FS]"
 	-s EXIT_RUNTIME=1
 
 	# Performance
 	# debug: -s ASSERTIONS=1 -Og -g
-	-s ASSERTIONS=0 -O3 -msimd128 -mavx2
+	-s ASSERTIONS=0 -O3 -msimd128
+	-msse4.1             # tested to be fastest on 1920x1080 detection
+	-flto                # makes perf difference esp. on 1920x1080 detection
+	-s WASM_BIGINT=1
+	-s MALLOC=mimalloc   # recommended by emscripten "larger but scales better in a multithreaded apps"
 
 	# Memory
 	-s INITIAL_MEMORY=1MB -s ALLOW_MEMORY_GROWTH=1 -s MAXIMUM_MEMORY=4gb
@@ -45,7 +48,6 @@ FLAGS=(
 
 emcc "${FLAGS[@]}"
 
-# Modifies Module.stdout API as function(buffer, offset, length)
 replace()
 {
 	if ! grep -qF "$1" "$3"; then
@@ -57,6 +59,7 @@ replace()
 	sed -i -e "s/$ESCAPED_FROM/$ESCAPED_TO/g" $3
 }
 
+# Modifies Module.stdout API as function(buffer, offset, length)
 replace "for(var i=0;i<length;i++){try{output(buffer[offset+i])}catch(e){throw new FS.ErrnoError(29)}}" \
 	"let i = length;try{output(buffer, offset, length)}catch(e){throw new FS.ErrnoError(29)}" \
 	$OUTPUT

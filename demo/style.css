@@ -45,6 +45,10 @@ canvas, video {
     backdrop-filter: blur(1em);
     background: #00000099;
 
+    a {
+        text-decoration: underline;
+    }
+
     #progressContainerStats {
         p {
             display: block;

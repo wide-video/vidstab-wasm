@@ -41,12 +41,10 @@ addEventListener("message", async ({data:eventData}) => {
             self.postMessage({resultCode, heap:vidstab.HEAPU8.length});
             break;
         }
-        case "finish": {
-            const {blobBuilder, times, vidstab} = detector;
-            try {
-                // flush-es remaining stdout
-                vidstab._exit(0);
-            } catch(error) {}
+        case "flush": {
+            const {blobBuilder, times} = detector;
+            // `vidstab._exit(0)` could be used here, but it might cause crashes when used with WORKERFS
+            // considering this worker will get `terminate()`-d anyway, that is not an important call.
             const blob = blobBuilder.flush();
             detector = undefined;
             self.postMessage({blob, times});

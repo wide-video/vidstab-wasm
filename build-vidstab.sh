@@ -25,7 +25,7 @@ FLAGS=(
 	# Emscripten
 	-s EXPORTED_FUNCTIONS="[_detectInit, _detectAddFrame, _transform, _malloc]"
 	-s EXPORTED_RUNTIME_METHODS="[ccall, FS]"
-	-s EXIT_RUNTIME=1
+	-s EXIT_RUNTIME=1    # fixes flush on FS.quit()
 
 	# Performance
 	# debug: -s ASSERTIONS=1 -Og -g

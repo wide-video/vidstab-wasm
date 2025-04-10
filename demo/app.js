@@ -5,14 +5,14 @@ import { VidstabTransform } from "./VidstabTransform.js";
 import { WVTrf } from "./WVTrf.js";
 
 const source = {
-	//url: "assets/oojVZSZo4lM.mp4",
+	url: "assets/oojVZSZo4lM.mp4",
 	//url: "assets/oojVZSZo4lM-3sec.mp4",
 	//url: "assets/ohl1kz-JcTg.mp4",
-	url: "assets/GOPR0438.MP4",
+	//url: "assets/GOPR0438.MP4",
 	//url: "assets/GOPR0438-30fps-10sec.MP4",
 	//transformResolution: {width:640, height:360},
-	//transformResolution: {width:1280, height:720},
-	transformResolution: {width:1920, height:1080},
+	transformResolution: {width:1280, height:720},
+	//transformResolution: {width:1920, height:1080},
 	frameCount: 300,
 
 	//wvTrfUrl: "assets/GOPR0438.MP4-1280x720-3000.wvtrf",
@@ -73,9 +73,30 @@ async function detect(streamer, width, height, frameCount) {
 	return detector.flush();
 }
 
+async function decide(wvTrf, filename) {
+	const {promise, resolve} = Promise.withResolvers();
+
+	const link = document.createElement("a");
+	link.href = URL.createObjectURL(wvTrf);
+	link.download = filename;
+	link.innerText = `Download ${filename}`;
+	link.onclick = resolve;
+
+	const link2 = document.createElement("a");
+	link2.innerText = "Skip";
+	link2.onclick = resolve;
+
+	progressContainer.innerHTML = "";
+	progressContainer.append(link, link2);
+	await promise;
+	progressContainer.innerHTML = "";
+	return;
+}
+
 async function transform(streamer, wvTrfData) {
 	const {height, times, trf, width} = wvTrfData;
 	progressContainerStats.innerHTML = `Parsing TRF ${formatMB(trf.size)}`;
+	console.log(progressContainerStats.innerHTML);
 	const config = {
 		smoothing: undefined,
 		zoom: undefined,
@@ -109,26 +130,6 @@ async function transform(streamer, wvTrfData) {
 		video.requestVideoFrameCallback(render);
 	}
 	render();
-}
-
-async function decide(wvTrf, filename) {
-	const {promise, resolve} = Promise.withResolvers();
-
-	const link = document.createElement("a");
-	link.href = URL.createObjectURL(wvTrf);
-	link.download = filename;
-	link.innerText = `Download ${filename}`;
-	link.onclick = resolve;
-
-	const link2 = document.createElement("a");
-	link2.innerText = "Skip";
-	link2.onclick = resolve;
-
-	progressContainer.innerHTML = "";
-	progressContainer.append(link, link2);
-	await promise;
-	progressContainer.innerHTML = "";
-	return;
 }
 
 (async () => {

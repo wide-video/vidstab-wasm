@@ -5,7 +5,7 @@ export class VidstabTransform {
         const worker = new Worker("VidstabTransformWorker.js");
         worker.postMessage({appUrlBase, blob, times, width, height, ...config});
         const result = await new Promise(resolve => {
-            worker.addEventListener("message", event => resolve(event.data))}, {once:true});
+            worker.addEventListener("message", event => resolve(event.data), {once:true})});
         worker.terminate();
         return result;
     }

@@ -16,7 +16,7 @@ addEventListener("message", async ({data:eventData}) => {
             const vidstab = detector.vidstab = await createVidstab({
                 mainScriptUrlOrBlob: scriptUrl,
                 locateFile:url => `${wasmUrlBase}${url}`,
-                stdout:(buffer, offset, length) => 
+                stdout:(buffer, offset, length) =>
                     length && blobBuilder.add(buffer.slice(offset, offset + length).buffer),
                 print:d => d && console.log(d),
                 printErr:d => d && console.log(d)});
@@ -42,7 +42,8 @@ addEventListener("message", async ({data:eventData}) => {
             break;
         }
         case "flush": {
-            const {blobBuilder, times} = detector;
+            const {blobBuilder, times, vidstab} = detector;
+            vidstab.FS.quit(); // flushes stdout()
             // `vidstab._exit(0)` could be used here, but it might cause crashes when used with WORKERFS
             // considering this worker will get `terminate()`-d anyway, that is not an important call.
             const blob = blobBuilder.flush();

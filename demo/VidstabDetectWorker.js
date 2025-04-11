@@ -18,7 +18,6 @@ addEventListener("message", async ({data:eventData}) => {
                 locateFile:url => `${wasmUrlBase}${url}`,
                 stdout:(buffer, offset, length) =>
                     length && blobBuilder.add(buffer.slice(offset, offset + length).buffer),
-                print:d => d && console.log(d),
                 printErr:d => d && console.log(d)});
             detector.framePtr = vidstab._malloc(frameSize);
             const resultCode = vidstab.ccall("detectInit", "number",

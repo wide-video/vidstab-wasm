@@ -9,7 +9,6 @@ addEventListener("message", async ({data:eventData}) => {
     const vidstab = await createVidstab({
         mainScriptUrlOrBlob: scriptUrl,
         locateFile:url => `${wasmUrlBase}${url}`,
-        print:d => d && console.log(d),
         printErr:d => d && console.log(d)});
     const transformsCountPtr = vidstab._malloc(4);
     const transformsPtr = vidstab._malloc(4);

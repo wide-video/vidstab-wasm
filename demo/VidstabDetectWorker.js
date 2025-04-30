@@ -11,7 +11,7 @@ addEventListener("message", async ({data:eventData}) => {
 
             const frameSize = width * height;
             const blobBuilder = new BlobBuilder();
-            const frameBuffer = new Uint8Array(frameSize)
+            const frameBuffer = new Uint8Array(frameSize);
             detector = {blobBuilder, frameBuffer, times:[]};
             const vidstab = detector.vidstab = await createVidstab({
                 mainScriptUrlOrBlob: scriptUrl,

@@ -1,5 +1,5 @@
 addEventListener("message", async ({data:eventData}) => {
-    const {appUrlBase, camPathAlgo, blob, height, interpolType,
+    const {appUrlBase, camPathAlgo, blob, height,
         maxAngle, maxShift, optZoom, smoothing, smoothZoom, times,
         width, zoom, zoomSpeed} = eventData;
     const wasmUrlBase = `${appUrlBase}../wasm/`;
@@ -18,11 +18,11 @@ addEventListener("message", async ({data:eventData}) => {
         ["string", "number", "number",
             "number", "number", "number", "number",
             "number", "number", "number", "number",
-            "number", "number", "number"],
+            "number", "number"],
         [path, width, height, 
             smoothing ?? -1, zoom ?? -1, optZoom ?? -1, zoomSpeed ?? -1,
-            interpolType ?? -1, maxShift ?? -1, maxAngle ?? -1, smoothZoom ?? -1,
-            camPathAlgo ?? -1, transformsCountPtr, transformsPtr]);
+            maxShift ?? -1, maxAngle ?? -1, smoothZoom ?? -1, camPathAlgo ?? -1,
+            transformsCountPtr, transformsPtr]);
     const heap = vidstab.HEAPU8.length;
     const transforms = bufferToTransforms(vidstab, transformsCountPtr, transformsPtr, times);
     // `vidstab._exit(0)` could be used here, but it might cause crashes

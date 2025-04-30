@@ -72,8 +72,8 @@ int detectAddFrame(uint8_t* framePtr) {
 
 int transform(const char* trfFile, int width, int height,
     int smoothing, double zoom, int optZoom, double zoomSpeed,
-    VSInterpolType interpolType, int maxShift, double maxAngle, int smoothZoom,
-    VSCamPathAlgo  camPathAlgo, int* transformsCountPtr, int* transformsPtr) {
+    int maxShift, double maxAngle, int smoothZoom, VSCamPathAlgo camPathAlgo,
+    int* transformsCountPtr, int* transformsPtr) {
     VSFrameInfo frameInfo;
     if(!vsFrameInfoInit(&frameInfo, width, height, PF_GRAY8))
         return 1;
@@ -88,8 +88,6 @@ int transform(const char* trfFile, int width, int height,
         transformConfig.optZoom = optZoom;
     if(zoomSpeed != -1)
         transformConfig.zoomSpeed = zoomSpeed;
-    if(interpolType != -1)
-        transformConfig.interpolType = interpolType;
     if(maxShift != -1)
         transformConfig.maxShift = maxShift;
     if(maxAngle != -1)
@@ -104,7 +102,6 @@ int transform(const char* trfFile, int width, int height,
     vs_log_info(MOD_NAME, "    zoom: %f\n", transformConfig.zoom);
     vs_log_info(MOD_NAME, "    optZoom: %i\n", transformConfig.optZoom);
     vs_log_info(MOD_NAME, "    zoomSpeed: %f\n", transformConfig.zoomSpeed);
-    vs_log_info(MOD_NAME, "    interpolType: %i\n", transformConfig.interpolType);
     vs_log_info(MOD_NAME, "    maxShift: %i\n", transformConfig.maxShift);
     vs_log_info(MOD_NAME, "    maxAngle: %f\n", transformConfig.maxAngle);
     vs_log_info(MOD_NAME, "    smoothZoom: %i\n", transformConfig.smoothZoom);

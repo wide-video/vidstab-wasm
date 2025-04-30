@@ -102,7 +102,6 @@ async function transform(streamer, wvTrfData) {
 		zoom: undefined,
 		optZoom: undefined,
 		zoomSpeed: undefined,
-        interpolType: undefined,
 		maxShift: undefined,
 		maxAngle: undefined,
 		smoothZoom: undefined,
